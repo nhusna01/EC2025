@@ -66,7 +66,6 @@ if not arts_df.empty:
         values='Count',
         names='Gender',
         title='Distribution of Gender in Arts Faculty',
-        hole=0.4, # Creates a donut chart (optional, but good visual practice)
         color_discrete_sequence=px.colors.qualitative.D3
     )
 
