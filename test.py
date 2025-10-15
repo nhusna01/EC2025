@@ -186,9 +186,7 @@ with col2:
 
 
 
-# -----------------------------
-# LOAD DATA
-# -----------------------------
+
 file_name = "arts_faculty_data.csv"
 arts_df = pd.read_csv(file_name)
 
@@ -197,9 +195,7 @@ st.title("Average Student Expectations & Satisfaction by Gender (Interactive Rad
 # Clean column names (remove leading/trailing spaces)
 arts_df.columns = arts_df.columns.str.strip()
 
-# -----------------------------
-# DEFINE RELEVANT COLUMNS
-# -----------------------------
+
 spider_cols_full = [
     'Q3 [What was your expectation about the University as related to quality of resources?]',
     'Q4 [What was your expectation about the University as related to quality of learning environment?]',
@@ -213,9 +209,6 @@ if missing_cols:
     st.error(f"Missing columns in your dataset: {missing_cols}")
     st.stop()
 
-# -----------------------------
-# CLEAN DATA
-# -----------------------------
 # Convert to numeric safely
 for col in spider_cols_full:
     arts_df[col] = pd.to_numeric(arts_df[col], errors='coerce')
@@ -231,9 +224,7 @@ arts_df = arts_df.dropna(subset=['Gender'] + spider_cols_full)
 # Group by Gender and compute mean values
 spider_data = arts_df.groupby('Gender')[spider_cols_full].mean().reset_index()
 
-# -----------------------------
-# DEFINE AXIS LABELS (short names)
-# -----------------------------
+
 categories_abbr = [
     'Q3: Resources (Expectation)',
     'Q4: Learning Env. (Expectation)',
@@ -241,9 +232,7 @@ categories_abbr = [
     'Q6: Best Aspects'
 ]
 
-# -----------------------------
-# PLOTLY RADAR CHART
-# -----------------------------
+
 fig = go.Figure()
 
 # Bright colors
@@ -265,9 +254,7 @@ for i in range(len(spider_data)):
         opacity=0.4
     ))
 
-# -----------------------------
-# CUSTOMIZE LAYOUT
-# -----------------------------
+
 fig.update_layout(
     polar=dict(
         bgcolor='white',
@@ -295,7 +282,4 @@ fig.update_layout(
     template='plotly_white'
 )
 
-# -----------------------------
-# DISPLAY IN STREAMlit
-# -----------------------------
 st.plotly_chart(fig, use_container_width=True)
