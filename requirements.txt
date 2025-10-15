@@ -2,4 +2,4 @@ streamlit
 plotly.express
 pandas
 plotly.graph_objects
-plotly.subplots import make_subplots
+plotly.subplots 
