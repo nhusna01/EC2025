@@ -91,7 +91,7 @@ else:
     st.warning("Data could not be loaded or the 'Gender' column is missing/empty. Cannot generate the chart.")
 
 
-import plotly.express as px
+
 
 # Load the data
 file_name = "arts_faculty_data.csv"
