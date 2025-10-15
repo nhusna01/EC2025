@@ -3,3 +3,4 @@ plotly.express
 pandas
 plotly.graph_objects
 plotly.subplots 
+make_subplots
