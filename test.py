@@ -186,16 +186,20 @@ with col2:
 
 
 
-
+# -----------------------------
+# LOAD DATA
+# -----------------------------
 file_name = "arts_faculty_data.csv"
 arts_df = pd.read_csv(file_name)
 
 st.title("Average Student Expectations & Satisfaction by Gender (Interactive Radar Chart)")
 
-# Clean column names (remove leading/trailing spaces)
+# Clean column names
 arts_df.columns = arts_df.columns.str.strip()
 
-
+# -----------------------------
+# DEFINE RELEVANT COLUMNS
+# -----------------------------
 spider_cols_full = [
     'Q3 [What was your expectation about the University as related to quality of resources?]',
     'Q4 [What was your expectation about the University as related to quality of learning environment?]',
@@ -203,28 +207,43 @@ spider_cols_full = [
     'Q6 [What are the best aspects of the program?]'
 ]
 
-# Check if all columns exist
+# Validate columns
 missing_cols = [col for col in spider_cols_full if col not in arts_df.columns]
 if missing_cols:
     st.error(f"Missing columns in your dataset: {missing_cols}")
     st.stop()
 
-# Convert to numeric safely
+# Convert to numeric
 for col in spider_cols_full:
     arts_df[col] = pd.to_numeric(arts_df[col], errors='coerce')
 
-# Handle Gender column
+# Check Gender column
 if 'Gender' not in arts_df.columns:
-    st.error("Column 'Gender' not found in dataset. Please check the exact column name.")
+    st.error("Column 'Gender' not found in dataset. Please verify the column name.")
     st.stop()
 
-# Drop rows with missing Gender or numeric responses
+# Drop missing values
 arts_df = arts_df.dropna(subset=['Gender'] + spider_cols_full)
 
-# Group by Gender and compute mean values
+# Group by Gender
 spider_data = arts_df.groupby('Gender')[spider_cols_full].mean().reset_index()
 
+# -----------------------------
+# STREAMLIT GENDER FILTER
+# -----------------------------
+genders_available = spider_data['Gender'].unique().tolist()
+selected_genders = st.multiselect(
+    "Select Gender(s) to Display:",
+    options=genders_available,
+    default=genders_available
+)
 
+# Filter dataset based on selection
+filtered_data = spider_data[spider_data['Gender'].isin(selected_genders)]
+
+# -----------------------------
+# DEFINE LABELS
+# -----------------------------
 categories_abbr = [
     'Q3: Resources (Expectation)',
     'Q4: Learning Env. (Expectation)',
@@ -232,17 +251,23 @@ categories_abbr = [
     'Q6: Best Aspects'
 ]
 
-
+# -----------------------------
+# PLOTLY RADAR CHART
+# -----------------------------
 fig = go.Figure()
 
-# Bright colors
-colors = {'Female': '#00BFFF', 'Male': '#FF5733'}
+# Bright color palette
+colors = {
+    'Female': '#00BFFF',  # bright blue
+    'Male': '#FF5733',    # bright orange
+    'Other': '#9B59B6'    # fallback color if any
+}
 
-# Add trace per gender
-for i in range(len(spider_data)):
-    gender = spider_data.loc[i, 'Gender']
-    values = spider_data.loc[i, spider_cols_full].values.flatten().tolist()
-    values += values[:1]  # Close the loop
+# Add traces dynamically based on selection
+for i in range(len(filtered_data)):
+    gender = filtered_data.loc[i, 'Gender']
+    values = filtered_data.loc[i, spider_cols_full].values.flatten().tolist()
+    values += values[:1]  # close the radar
 
     fig.add_trace(go.Scatterpolar(
         r=values,
@@ -254,7 +279,9 @@ for i in range(len(spider_data)):
         opacity=0.4
     ))
 
-
+# -----------------------------
+# LAYOUT SETTINGS
+# -----------------------------
 fig.update_layout(
     polar=dict(
         bgcolor='white',
@@ -282,4 +309,7 @@ fig.update_layout(
     template='plotly_white'
 )
 
+# -----------------------------
+# DISPLAY CHART
+# -----------------------------
 st.plotly_chart(fig, use_container_width=True)
