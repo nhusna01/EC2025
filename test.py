@@ -1,7 +1,6 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-import plotly.graph_objects as go
 
 
 # Define the URL
@@ -238,89 +237,47 @@ st.plotly_chart(fig, use_container_width=True)
 
 
 
-
 # Load data
-file_name = "arts_faculty_data.csv"
-arts_df = pd.read_csv(file_name)
+# Example: arts_df = pd.read_csv("arts_faculty_data.csv")
 
-# Define columns for the radar chart
-spider_cols_full = [
-    'Q3 [What was your expectation about the University as related to quality of resources?]',
-    'Q4 [What was your expectation about the University as related to quality of learning environment?]',
-    'Q5 [To what extent your expectation was met?]',
-    'Q6 [What are the best aspects of the program?]'
-]
+st.title("🎨 Distribution of Gender within Arts Programs (Interactive Stacked Bar Chart)")
 
-# Convert columns to numeric
-for col in spider_cols_full:
-    arts_df[col] = pd.to_numeric(arts_df[col], errors='coerce')
+# Count the occurrences of each combination of 'Arts Program' and 'Gender'
+gender_program_counts = (
+    arts_df.groupby(['Arts Program', 'Gender'])
+    .size()
+    .reset_index(name='Count')
+)
 
-# Drop rows with missing gender
-arts_df.dropna(subset=['Gender'], inplace=True)
+# Define a bright color palette for genders
+bright_colors = ['#FF6347', '#00BFFF', '#FFD700', '#32CD32', '#FF1493']
 
-# Group by gender and calculate mean
-spider_data = arts_df.groupby('Gender')[spider_cols_full].mean().reset_index()
-
-# Abbreviated axis labels for readability
-categories_abbr = [
-    'Q3: Resources (Expectation)',
-    'Q4: Learning Env. (Expectation)',
-    'Q5: Expectation Met (Extent)',
-    'Q6: Best Aspects of Program'
-]
-
-# Streamlit title
-st.title("Average Student Expectations & Satisfaction by Gender (Radar Chart)")
-
-# Create the radar chart
-fig = go.Figure()
-
-# Define bright contrasting colors
-color_map = {'Female': '#00BFFF', 'Male': '#FF6347', 'Other': '#32CD32'}
-
-# Add each gender’s trace
-for i in range(len(spider_data)):
-    gender = spider_data.loc[i, 'Gender']
-    values = spider_data.loc[i, spider_cols_full].tolist()
-    values += values[:1]  # close the radar shape
-
-    fig.add_trace(go.Scatterpolar(
-        r=values,
-        theta=categories_abbr + [categories_abbr[0]],
-        fill='toself',
-        name=gender,
-        line=dict(color=color_map.get(gender, '#808080'), width=3),
-        opacity=0.7
-    ))
+# Create stacked bar chart with Plotly
+fig = px.bar(
+    gender_program_counts,
+    x='Arts Program',
+    y='Count',
+    color='Gender',
+    title='Distribution of Gender within Arts Programs',
+    color_discrete_sequence=bright_colors,
+    text='Count',
+)
 
 # Customize layout
 fig.update_layout(
-    polar=dict(
-        radialaxis=dict(
-            visible=True,
-            range=[0, 5],
-            tickvals=[1, 2, 3, 4, 5],
-            tickfont=dict(size=12)
-        )
-    ),
-    showlegend=True,
-    legend=dict(
-        title="Gender",
-        font=dict(size=12),
-        orientation="h",
-        yanchor="bottom",
-        y=-0.15,
-        xanchor="center",
-        x=0.5
-    ),
-    title=dict(
-        text="Average Student Expectations & Satisfaction by Gender",
-        font=dict(size=20, color="black"),
-        x=0.5
-    ),
-    paper_bgcolor="white",
-    plot_bgcolor="white"
+    barmode='stack',
+    title_font=dict(size=20, color='black'),
+    xaxis_title='Arts Program',
+    yaxis_title='Count',
+    font=dict(size=13),
+    plot_bgcolor='rgba(245, 245, 245, 1)',
+    paper_bgcolor='white',
+    legend_title_text='Gender',
+    margin=dict(t=80, l=60, r=60, b=100)
 )
+
+# Improve x-axis readability
+fig.update_xaxes(tickangle=45)
 
 # Display in Streamlit
 st.plotly_chart(fig, use_container_width=True)
