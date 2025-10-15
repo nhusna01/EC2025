@@ -119,3 +119,47 @@ fig = px.bar(
 
 # Display the chart in Streamlit
 st.plotly_chart(fig, use_container_width=True)
+
+
+
+
+
+# Example: arts_df = pd.read_csv("your_dataset.csv")
+
+st.title("Distribution of Bachelor Academic Year by Gender (Pastel Style)")
+
+# Group by Gender and Academic Year and count occurrences
+gender_year_counts = (
+    arts_df.groupby(['Gender', 'Bachelor  Academic Year in EU'])
+    .size()
+    .reset_index(name='Count')
+)
+
+# Define a pastel color palette
+pastel_colors = ['#AEC6CF', '#FFB6B9', '#BFD8B8', '#FBE7C6', '#CBAACB', '#D5AAFF', '#F9C5BD']
+
+# Create grouped bar chart using Plotly Express with pastel colors
+fig = px.bar(
+    gender_year_counts,
+    x='Gender',
+    y='Count',
+    color='Bachelor  Academic Year in EU',
+    barmode='group',
+    color_discrete_sequence=pastel_colors,
+    title='Distribution of Bachelor Academic Year by Gender',
+    labels={'Gender': 'Gender', 'Count': 'Count', 'Bachelor  Academic Year in EU': 'Academic Year'},
+    template='plotly_white'
+)
+
+# Improve layout styling
+fig.update_layout(
+    title_font_size=20,
+    font=dict(size=14),
+    bargap=0.15,
+    plot_bgcolor='rgba(245, 245, 245, 1)',
+    paper_bgcolor='rgba(255, 255, 255, 1)',
+)
+
+# Display the chart in Streamlit
+st.plotly_chart(fig, use_container_width=True)
+
