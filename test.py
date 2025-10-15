@@ -127,7 +127,7 @@ st.plotly_chart(fig, use_container_width=True)
 
 # Example: arts_df = pd.read_csv("your_dataset.csv")
 
-st.title("Distribution of SSC and HSC GPA in Arts Faculty")
+st.title("Distribution of SSC and HSC GPA in Arts Faculty (Bright Colors)")
 
 # Convert GPA columns to numeric
 arts_df['S.S.C (GPA)'] = pd.to_numeric(arts_df['S.S.C (GPA)'], errors='coerce')
@@ -136,37 +136,38 @@ arts_df['H.S.C (GPA)'] = pd.to_numeric(arts_df['H.S.C (GPA)'], errors='coerce')
 # Drop rows with missing GPA values
 gpa_df = arts_df.dropna(subset=['S.S.C (GPA)', 'H.S.C (GPA)'])
 
-# Define pastel colors for a soft aesthetic
-pastel_colors = ['#FFB6B9', '#AEC6CF']
+# Define bright color palette
+bright_colors = ['#FF5733', '#00BFFF']  # Bright orange & electric blue
 
-# Create two histograms using Plotly Express
+# Create histogram for SSC GPA
 fig_ssc = px.histogram(
     gpa_df,
     x='S.S.C (GPA)',
     nbins=20,
     title='Distribution of SSC GPA in Arts Faculty',
-    color_discrete_sequence=[pastel_colors[0]],
-    marginal='box',  # Adds a boxplot on top for extra insight
+    color_discrete_sequence=[bright_colors[0]],
+    marginal='box',  # Adds a boxplot on top
     template='plotly_white'
 )
 
+# Create histogram for HSC GPA
 fig_hsc = px.histogram(
     gpa_df,
     x='H.S.C (GPA)',
     nbins=20,
     title='Distribution of HSC GPA in Arts Faculty',
-    color_discrete_sequence=[pastel_colors[1]],
+    color_discrete_sequence=[bright_colors[1]],
     marginal='box',
     template='plotly_white'
 )
 
-# Customize layout style
+# Customize layout style for both charts
 for fig in [fig_ssc, fig_hsc]:
     fig.update_layout(
         title_font_size=20,
-        font=dict(size=14),
+        font=dict(size=14, color='#222'),
         bargap=0.1,
-        plot_bgcolor='rgba(245,245,245,1)',
+        plot_bgcolor='rgba(240,240,240,1)',
         paper_bgcolor='rgba(255,255,255,1)',
         showlegend=False
     )
