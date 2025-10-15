@@ -1,8 +1,6 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 # Define the URL
 url = "https://raw.githubusercontent.com/nhusna01/EC2025/refs/heads/main/arts_faculty_data.csv"
@@ -93,6 +91,8 @@ else:
     st.warning("Data could not be loaded or the 'Gender' column is missing/empty. Cannot generate the chart.")
 
 
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 
 # Load the data
