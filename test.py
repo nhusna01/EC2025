@@ -91,64 +91,65 @@ else:
     st.warning("Data could not be loaded or the 'Gender' column is missing/empty. Cannot generate the chart.")
 
 
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-
+import plotly.express as px
 
 # Load the data
 file_name = "arts_faculty_data.csv"
 arts_df = pd.read_csv(file_name)
 
-# Convert GPA columns to numeric, coercing errors to NaN
-arts_df['S.S.C (GPA)'] = pd.to_numeric(arts_df['S.S.C (GPA)'], errors='coerce')
-arts_df['H.S.C (GPA)'] = pd.to_numeric(arts_df['H.S.C (GPA)'], errors='coerce')
+# 1. Identify GPA columns (indices 12 to 23 inclusive, based on previous inspection)
+gpa_cols_full = arts_df.columns[12:24].tolist()
 
-# Drop rows with NaN values in GPA columns for plotting
-gpa_df = arts_df.dropna(subset=['S.S.C (GPA)', 'H.S.C (GPA)'])
+# 2. Convert GPA columns to numeric
+for col in gpa_cols_full:
+    arts_df[col] = pd.to_numeric(arts_df[col], errors='coerce')
 
-# Create a subplot figure: 1 row, 2 columns
-fig = make_subplots(
-    rows=1, cols=2,
-    subplot_titles=("Distribution of SSC GPA in Arts Faculty",
-                    "Distribution of HSC GPA in Arts Faculty")
+# Select only the relevant columns and drop rows with missing Arts Program
+plot_df = arts_df[['Arts Program'] + gpa_cols_full].dropna(subset=['Arts Program'])
+
+# 3. Melt the DataFrame to long format
+# 'id_vars' are columns to keep, 'value_vars' are columns to unpivot (GPA semesters)
+melted_df = plot_df.melt(
+    id_vars='Arts Program',
+    value_vars=gpa_cols_full,
+    var_name='Semester Name',
+    value_name='GPA'
+).dropna(subset=['GPA'])
+
+# 4. Create a numerical semester order column for correct plotting
+semester_order_map = {name: i + 1 for i, name in enumerate(gpa_cols_full)}
+melted_df['Semester Order'] = melted_df['Semester Name'].map(semester_order_map)
+
+# 5. Calculate the mean GPA for each Arts Program at each Semester
+gpa_trend_df = melted_df.groupby(['Arts Program', 'Semester Order', 'Semester Name'])['GPA'].mean().reset_index()
+
+# 6. Create the Plotly Line Chart
+fig = px.line(
+    gpa_trend_df,
+    x='Semester Name',
+    y='GPA',
+    color='Arts Program',
+    markers=True,
+    title='Average GPA Trend by Arts Program Over Academic Semesters'
 )
 
-# 1. Histogram for SSC GPA (Left Plot)
-fig.add_trace(
-    go.Histogram(
-        x=gpa_df['S.S.C (GPA)'],
-        name='SSC GPA',
-        marker_color='#1f77b4',
-        opacity=0.7,
-    ),
-    row=1, col=1
+# Customise axes and layout for better readability
+fig.update_xaxes(
+    tickangle=45,
+    title_text='Academic Semester',
+    categoryorder='array',
+    categoryarray=gpa_cols_full # Ensure semesters are in the correct chronological order
 )
-
-# 2. Histogram for HSC GPA (Right Plot)
-fig.add_trace(
-    go.Histogram(
-        x=gpa_df['H.S.C (GPA)'],
-        name='HSC GPA',
-        marker_color='#ff7f0e',
-        opacity=0.7,
-    ),
-    row=1, col=2
+fig.update_yaxes(
+    title_text='Average GPA',
+    range=[2.5, 4.0] # Set a relevant range for GPA
 )
-
-# Update layout for a cleaner look
 fig.update_layout(
-    title_text="GPA Distribution of Arts Faculty Students (SSC vs. HSC)",
-    height=500,
-    width=900,
-    showlegend=False
+    height=600,
+    width=1000,
+    hovermode="x unified",
+    legend_title_text='Arts Program'
 )
 
-# Set x-axis labels
-fig.update_xaxes(title_text="S.S.C (GPA)", row=1, col=1)
-fig.update_xaxes(title_text="H.S.C (GPA)", row=1, col=2)
-
-# Set y-axis label (only for the left plot, as they share the same axis meaning)
-fig.update_yaxes(title_text="Frequency", row=1, col=1)
-
-# To display in Streamlit, you would use:
-# st.plotly_chart(fig)
+# Save the plot as an HTML file for easy viewing and Streamlit integration
+fig.write_html("gpa_trend_line_chart.html")
