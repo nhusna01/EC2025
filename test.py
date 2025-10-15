@@ -93,53 +93,29 @@ else:
 
 
 
+# Example: arts_df is your dataset
+# arts_df = pd.read_csv("your_dataset.csv")
 
-# --- Data Preparation ---
-medium_col = 'H.S.C or Equivalent study medium'
-gpa_col = '1st Year Semester 1' # Best available GPA column
+st.title("Distribution of Bachelor Academic Year by Gender")
 
-# Assuming arts_df is loaded and GPAs are converted to numeric
-
-# Drop rows where the GPA is NaN and clean the medium column
-plot_df = arts_df.dropna(subset=[gpa_col])
-plot_df[medium_col] = plot_df[medium_col].fillna('Unknown').str.strip()
-
-# Filter out categories with less than 2 observations
-medium_counts = plot_df[medium_col].value_counts()
-min_observations = 2
-valid_mediums = medium_counts[medium_counts >= min_observations].index.tolist()
-plot_df = plot_df[plot_df[medium_col].isin(valid_mediums)]
-
-
-# --- Plotly Histogram Code ---
-
-fig = px.histogram(
-    plot_df,
-    x=gpa_col,
-    color=medium_col,
-    marginal="box", # Adds a box plot on top for a concise summary (median/quartiles)
-    histnorm='probability density', # Normalises the area to 1, showing the shape of the distribution
-    barmode='overlay', # Stacks the bars on top of each other
-    opacity=0.6,
-    title=f'Distribution of Student Performance ({gpa_col}) by Prior Study Medium'
+# Group by Gender and Academic Year and count occurrences
+gender_year_counts = (
+    arts_df.groupby(['Gender', 'Bachelor  Academic Year in EU'])
+    .size()
+    .reset_index(name='Count')
 )
 
-# Customise axes and layout
-fig.update_xaxes(
-    title_text='GPA (First Year, First Semester)',
-    range=[2.5, 4.0] 
-)
-fig.update_yaxes(
-    title_text='Density / Probability'
-)
-fig.update_layout(
-    height=600,
-    width=900,
-    legend_title_text='Study Medium'
+# Create grouped bar chart using Plotly Express
+fig = px.bar(
+    gender_year_counts,
+    x='Gender',
+    y='Count',
+    color='Bachelor  Academic Year in EU',
+    barmode='group',
+    title='Distribution of Bachelor Academic Year by Gender',
+    labels={'Gender': 'Gender', 'Count': 'Count', 'Bachelor  Academic Year in EU': 'Academic Year'},
+    template='plotly_white'
 )
 
-# --- Streamlit Integration ---
-# In your Streamlit app (e.g., app.py), you would call:
-# st.plotly_chart(fig, use_container_width=True) 
-
-# (The output HTML file is 'gpa_medium_histogram.html')
+# Display the chart in Streamlit
+st.plotly_chart(fig, use_container_width=True)
