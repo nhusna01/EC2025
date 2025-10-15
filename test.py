@@ -1,6 +1,9 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+
 
 # Define the URL
 url = "https://raw.githubusercontent.com/nhusna01/EC2025/refs/heads/main/arts_faculty_data.csv"
@@ -178,3 +181,92 @@ with col1:
     st.plotly_chart(fig_ssc, use_container_width=True)
 with col2:
     st.plotly_chart(fig_hsc, use_container_width=True)
+
+
+
+
+
+# Load dataset
+file_name = "arts_faculty_data.csv"
+arts_df = pd.read_csv(file_name)
+
+st.title("Average Student Expectations & Satisfaction by Gender (Interactive Radar Chart)")
+
+# Define relevant columns
+spider_cols_full = [
+    'Q3 [What was your expectation about the University as related to quality of resources?]',
+    'Q4 [What was your expectation about the University as related to quality of learning environment?]',
+    'Q5 [To what extent your expectation was met?]',
+    'Q6 [What are the best aspects of the program?]'
+]
+
+# Convert columns to numeric
+for col in spider_cols_full:
+    arts_df[col] = pd.to_numeric(arts_df[col], errors='coerce')
+
+# Drop rows where Gender is NaN
+arts_df.dropna(subset=['Gender'], inplace=True)
+
+# Group by Gender and compute mean
+spider_data = arts_df.groupby('Gender')[spider_cols_full].mean().reset_index()
+
+# Shorter axis labels for readability
+categories_abbr = [
+    'Q3: Resources (Expectation)',
+    'Q4: Learning Env. (Expectation)',
+    'Q5: Expectation Met',
+    'Q6: Best Aspects'
+]
+
+# Make radar chart using Plotly
+fig = go.Figure()
+
+# Define bright colors
+colors = {'Female': '#00BFFF', 'Male': '#FF5733'}  # Bright blue & bright orange
+
+# Add one trace per gender
+for i in range(len(spider_data)):
+    gender = spider_data.loc[i, 'Gender']
+    values = spider_data.loc[i, spider_cols_full].values.flatten().tolist()
+    values += values[:1]  # Close the radar shape
+
+    fig.add_trace(go.Scatterpolar(
+        r=values,
+        theta=categories_abbr + [categories_abbr[0]],
+        fill='toself',
+        name=gender,
+        line=dict(color=colors.get(gender, 'grey'), width=3),
+        fillcolor=colors.get(gender, 'grey'),
+        opacity=0.4
+    ))
+
+# Customize layout
+fig.update_layout(
+    polar=dict(
+        bgcolor='white',
+        radialaxis=dict(
+            visible=True,
+            range=[0, 5],
+            tickvals=[1, 2, 3, 4, 5],
+            tickfont=dict(size=11, color='grey')
+        ),
+        angularaxis=dict(
+            tickfont=dict(size=12, color='black')
+        )
+    ),
+    showlegend=True,
+    legend=dict(
+        title="Gender",
+        font=dict(size=12),
+        bgcolor='rgba(255,255,255,0.6)'
+    ),
+    title=dict(
+        text='Average Student Expectations & Satisfaction by Gender',
+        x=0.5,
+        font=dict(size=18)
+    ),
+    template='plotly_white'
+)
+
+# Show the radar chart in Streamlit
+st.plotly_chart(fig, use_container_width=True)
