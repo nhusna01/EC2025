@@ -186,20 +186,20 @@ with col2:
 
 
 
-# -----------------------------
-# LOAD DATA
-# -----------------------------
+
+# Streamlit app title
+st.title("Average Student Expectations & Satisfaction by Gender")
+
+# Load CSV
 file_name = "arts_faculty_data.csv"
-arts_df = pd.read_csv(file_name)
+try:
+    arts_df = pd.read_csv(file_name)
+    st.success(" Data loaded successfully!")
+except FileNotFoundError:
+    st.error("File not found! Please ensure 'arts_faculty_data.csv' is in the same folder.")
+    st.stop()
 
-st.title("Average Student Expectations & Satisfaction by Gender (Interactive Radar Chart)")
-
-# Clean column names
-arts_df.columns = arts_df.columns.str.strip()
-
-# -----------------------------
-# DEFINE RELEVANT COLUMNS
-# -----------------------------
+# Define relevant columns
 spider_cols_full = [
     'Q3 [What was your expectation about the University as related to quality of resources?]',
     'Q4 [What was your expectation about the University as related to quality of learning environment?]',
@@ -207,109 +207,55 @@ spider_cols_full = [
     'Q6 [What are the best aspects of the program?]'
 ]
 
-# Validate columns
-missing_cols = [col for col in spider_cols_full if col not in arts_df.columns]
-if missing_cols:
-    st.error(f"Missing columns in your dataset: {missing_cols}")
-    st.stop()
-
-# Convert to numeric
+# Convert columns to numeric
 for col in spider_cols_full:
     arts_df[col] = pd.to_numeric(arts_df[col], errors='coerce')
 
-# Check Gender column
-if 'Gender' not in arts_df.columns:
-    st.error("Column 'Gender' not found in dataset. Please verify the column name.")
-    st.stop()
-
-# Drop missing values
-arts_df = arts_df.dropna(subset=['Gender'] + spider_cols_full)
+# Drop missing gender rows
+arts_df.dropna(subset=['Gender'], inplace=True)
 
 # Group by Gender
 spider_data = arts_df.groupby('Gender')[spider_cols_full].mean().reset_index()
 
-# -----------------------------
-# STREAMLIT GENDER FILTER
-# -----------------------------
-genders_available = spider_data['Gender'].unique().tolist()
-selected_genders = st.multiselect(
-    "Select Gender(s) to Display:",
-    options=genders_available,
-    default=genders_available
-)
-
-# Filter dataset based on selection
-filtered_data = spider_data[spider_data['Gender'].isin(selected_genders)]
-
-# -----------------------------
-# DEFINE LABELS
-# -----------------------------
+# Axis labels
 categories_abbr = [
-    'Q3: Resources (Expectation)',
-    'Q4: Learning Env. (Expectation)',
-    'Q5: Expectation Met',
-    'Q6: Best Aspects'
+    'Q3: Resources\n(Expectation)',
+    'Q4: Learning Env.\n(Expectation)',
+    'Q5: Expectation\nMet (Extent)',
+    'Q6: Best Aspects\nof Program'
 ]
-
-# -----------------------------
-# PLOTLY RADAR CHART
-# -----------------------------
-fig = go.Figure()
 
 # Bright color palette
 colors = {
-    'Female': '#00BFFF',  # bright blue
-    'Male': '#FF5733',    # bright orange
-    'Other': '#9B59B6'    # fallback color if any
+    'Female': '#FF1493',  # Bright pink
+    'Male': '#1E90FF'     # Bright blue
 }
 
-# Add traces dynamically based on selection
-for i in range(len(filtered_data)):
-    gender = filtered_data.loc[i, 'Gender']
-    values = filtered_data.loc[i, spider_cols_full].values.flatten().tolist()
-    values += values[:1]  # close the radar
+# Create Plotly radar figure
+fig = go.Figure()
 
+for i in range(len(spider_data)):
+    gender = spider_data.loc[i, 'Gender']
+    values = spider_data.loc[i, spider_cols_full].values.flatten().tolist()
+    values += values[:1]  # Close the circle
+    
     fig.add_trace(go.Scatterpolar(
         r=values,
         theta=categories_abbr + [categories_abbr[0]],
         fill='toself',
-        name=str(gender),
-        line=dict(color=colors.get(gender, '#888'), width=3),
-        fillcolor=colors.get(gender, '#888'),
-        opacity=0.4
+        name=gender,
+        line=dict(color=colors.get(gender, '#808080'), width=3)
     ))
 
-# -----------------------------
-# LAYOUT SETTINGS
-# -----------------------------
+# Layout settings
 fig.update_layout(
     polar=dict(
-        bgcolor='white',
-        radialaxis=dict(
-            visible=True,
-            range=[0, 5],
-            tickvals=[1, 2, 3, 4, 5],
-            tickfont=dict(size=11, color='grey')
-        ),
-        angularaxis=dict(
-            tickfont=dict(size=12, color='black')
-        )
+        radialaxis=dict(visible=True, range=[0, 5], tickvals=[1,2,3,4,5]),
     ),
     showlegend=True,
-    legend=dict(
-        title="Gender",
-        font=dict(size=12),
-        bgcolor='rgba(255,255,255,0.7)'
-    ),
-    title=dict(
-        text='Average Student Expectations & Satisfaction by Gender',
-        x=0.5,
-        font=dict(size=18)
-    ),
-    template='plotly_white'
+    title="Average Student Expectations & Satisfaction by Gender",
+    template="plotly_white"
 )
 
-# -----------------------------
-# DISPLAY CHART
-# -----------------------------
+# Display the chart in Streamlit
 st.plotly_chart(fig, use_container_width=True)
