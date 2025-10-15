@@ -187,75 +187,50 @@ with col2:
 
 
 
-# Streamlit app title
-st.title("Average Student Expectations & Satisfaction by Gender")
+# Load your dataset
+# Example: arts_df = pd.read_csv("arts_faculty_data.csv")
 
-# Load CSV
-file_name = "arts_faculty_data.csv"
-try:
-    arts_df = pd.read_csv(file_name)
-    st.success(" Data loaded successfully!")
-except FileNotFoundError:
-    st.error("File not found! Please ensure 'arts_faculty_data.csv' is in the same folder.")
-    st.stop()
+st.title("📊 Boxplots of Student Survey Responses (Interactive)")
 
-# Define relevant columns
-spider_cols_full = [
+# Select the relevant columns
+survey_cols = [
     'Q3 [What was your expectation about the University as related to quality of resources?]',
     'Q4 [What was your expectation about the University as related to quality of learning environment?]',
     'Q5 [To what extent your expectation was met?]',
     'Q6 [What are the best aspects of the program?]'
 ]
 
-# Convert columns to numeric
-for col in spider_cols_full:
+# Convert to numeric (handle any text/NaN)
+for col in survey_cols:
     arts_df[col] = pd.to_numeric(arts_df[col], errors='coerce')
 
-# Drop missing gender rows
-arts_df.dropna(subset=['Gender'], inplace=True)
+# Melt the dataframe for Plotly (long format)
+melted_df = arts_df.melt(value_vars=survey_cols, var_name='Question', value_name='Score')
 
-# Group by Gender
-spider_data = arts_df.groupby('Gender')[spider_cols_full].mean().reset_index()
+# Define a bold and bright color palette
+bright_colors = ["#FF6347", "#FFD700", "#00BFFF", "#32CD32", "#FF1493", "#FFA500"]
 
-# Axis labels
-categories_abbr = [
-    'Q3: Resources\n(Expectation)',
-    'Q4: Learning Env.\n(Expectation)',
-    'Q5: Expectation\nMet (Extent)',
-    'Q6: Best Aspects\nof Program'
-]
-
-# Bright color palette
-colors = {
-    'Female': '#FF1493',  # Bright pink
-    'Male': '#1E90FF'     # Bright blue
-}
-
-# Create Plotly radar figure
-fig = go.Figure()
-
-for i in range(len(spider_data)):
-    gender = spider_data.loc[i, 'Gender']
-    values = spider_data.loc[i, spider_cols_full].values.flatten().tolist()
-    values += values[:1]  # Close the circle
-    
-    fig.add_trace(go.Scatterpolar(
-        r=values,
-        theta=categories_abbr + [categories_abbr[0]],
-        fill='toself',
-        name=gender,
-        line=dict(color=colors.get(gender, '#808080'), width=3)
-    ))
-
-# Layout settings
-fig.update_layout(
-    polar=dict(
-        radialaxis=dict(visible=True, range=[0, 5], tickvals=[1,2,3,4,5]),
-    ),
-    showlegend=True,
-    title="Average Student Expectations & Satisfaction by Gender",
-    template="plotly_white"
+# Create the interactive boxplot
+fig = px.box(
+    melted_df,
+    x='Question',
+    y='Score',
+    color='Question',
+    color_discrete_sequence=bright_colors,
+    title='Distribution of Student Survey Responses (1–5)',
+    points='all',  # show all data points
 )
 
-# Display the chart in Streamlit
+# Customize layout
+fig.update_layout(
+    title_font=dict(size=22, color='black', family='Arial Black'),
+    xaxis_title='Survey Question',
+    yaxis_title='Score (1–5)',
+    font=dict(size=13, color='black'),
+    plot_bgcolor='rgba(245, 245, 245, 1)',
+    paper_bgcolor='rgba(255, 255, 255, 1)',
+    showlegend=False
+)
+
+# Display in Streamlit
 st.plotly_chart(fig, use_container_width=True)
