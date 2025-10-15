@@ -93,6 +93,7 @@ else:
 
 
 
+
 # Example: arts_df is your dataset
 # arts_df = pd.read_csv("your_dataset.csv")
 
@@ -126,40 +127,53 @@ st.plotly_chart(fig, use_container_width=True)
 
 # Example: arts_df = pd.read_csv("your_dataset.csv")
 
-st.title("Distribution of Bachelor Academic Year by Gender (Pastel Style)")
+st.title("Distribution of SSC and HSC GPA in Arts Faculty")
 
-# Group by Gender and Academic Year and count occurrences
-gender_year_counts = (
-    arts_df.groupby(['Gender', 'Bachelor  Academic Year in EU'])
-    .size()
-    .reset_index(name='Count')
-)
+# Convert GPA columns to numeric
+arts_df['S.S.C (GPA)'] = pd.to_numeric(arts_df['S.S.C (GPA)'], errors='coerce')
+arts_df['H.S.C (GPA)'] = pd.to_numeric(arts_df['H.S.C (GPA)'], errors='coerce')
 
-# Define a pastel color palette
-pastel_colors = ['#AEC6CF', '#FFB6B9', '#BFD8B8', '#FBE7C6', '#CBAACB', '#D5AAFF', '#F9C5BD']
+# Drop rows with missing GPA values
+gpa_df = arts_df.dropna(subset=['S.S.C (GPA)', 'H.S.C (GPA)'])
 
-# Create grouped bar chart using Plotly Express with pastel colors
-fig = px.bar(
-    gender_year_counts,
-    x='Gender',
-    y='Count',
-    color='Bachelor  Academic Year in EU',
-    barmode='group',
-    color_discrete_sequence=pastel_colors,
-    title='Distribution of Bachelor Academic Year by Gender',
-    labels={'Gender': 'Gender', 'Count': 'Count', 'Bachelor  Academic Year in EU': 'Academic Year'},
+# Define pastel colors for a soft aesthetic
+pastel_colors = ['#FFB6B9', '#AEC6CF']
+
+# Create two histograms using Plotly Express
+fig_ssc = px.histogram(
+    gpa_df,
+    x='S.S.C (GPA)',
+    nbins=20,
+    title='Distribution of SSC GPA in Arts Faculty',
+    color_discrete_sequence=[pastel_colors[0]],
+    marginal='box',  # Adds a boxplot on top for extra insight
     template='plotly_white'
 )
 
-# Improve layout styling
-fig.update_layout(
-    title_font_size=20,
-    font=dict(size=14),
-    bargap=0.15,
-    plot_bgcolor='rgba(245, 245, 245, 1)',
-    paper_bgcolor='rgba(255, 255, 255, 1)',
+fig_hsc = px.histogram(
+    gpa_df,
+    x='H.S.C (GPA)',
+    nbins=20,
+    title='Distribution of HSC GPA in Arts Faculty',
+    color_discrete_sequence=[pastel_colors[1]],
+    marginal='box',
+    template='plotly_white'
 )
 
-# Display the chart in Streamlit
-st.plotly_chart(fig, use_container_width=True)
+# Customize layout style
+for fig in [fig_ssc, fig_hsc]:
+    fig.update_layout(
+        title_font_size=20,
+        font=dict(size=14),
+        bargap=0.1,
+        plot_bgcolor='rgba(245,245,245,1)',
+        paper_bgcolor='rgba(255,255,255,1)',
+        showlegend=False
+    )
 
+# Display both histograms side-by-side in Streamlit
+col1, col2 = st.columns(2)
+with col1:
+    st.plotly_chart(fig_ssc, use_container_width=True)
+with col2:
+    st.plotly_chart(fig_hsc, use_container_width=True)
