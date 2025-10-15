@@ -270,7 +270,7 @@ categories_abbr = [
 ]
 
 # Streamlit title
-st.title("🕸️ Average Student Expectations & Satisfaction by Gender (Radar Chart)")
+st.title("Average Student Expectations & Satisfaction by Gender (Radar Chart)")
 
 # Create the radar chart
 fig = go.Figure()
