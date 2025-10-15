@@ -89,3 +89,65 @@ if not arts_df.empty:
 
 else:
     st.warning("Data could not be loaded or the 'Gender' column is missing/empty. Cannot generate the chart.")
+
+
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+# Load the data
+file_name = "arts_faculty_data.csv"
+arts_df = pd.read_csv(file_name)
+
+# Convert GPA columns to numeric, coercing errors to NaN
+arts_df['S.S.C (GPA)'] = pd.to_numeric(arts_df['S.S.C (GPA)'], errors='coerce')
+arts_df['H.S.C (GPA)'] = pd.to_numeric(arts_df['H.S.C (GPA)'], errors='coerce')
+
+# Drop rows with NaN values in GPA columns for plotting
+gpa_df = arts_df.dropna(subset=['S.S.C (GPA)', 'H.S.C (GPA)'])
+
+# Create a subplot figure: 1 row, 2 columns
+fig = make_subplots(
+    rows=1, cols=2,
+    subplot_titles=("Distribution of SSC GPA in Arts Faculty",
+                    "Distribution of HSC GPA in Arts Faculty")
+)
+
+# 1. Histogram for SSC GPA (Left Plot)
+fig.add_trace(
+    go.Histogram(
+        x=gpa_df['S.S.C (GPA)'],
+        name='SSC GPA',
+        marker_color='#1f77b4',
+        opacity=0.7,
+    ),
+    row=1, col=1
+)
+
+# 2. Histogram for HSC GPA (Right Plot)
+fig.add_trace(
+    go.Histogram(
+        x=gpa_df['H.S.C (GPA)'],
+        name='HSC GPA',
+        marker_color='#ff7f0e',
+        opacity=0.7,
+    ),
+    row=1, col=2
+)
+
+# Update layout for a cleaner look
+fig.update_layout(
+    title_text="GPA Distribution of Arts Faculty Students (SSC vs. HSC)",
+    height=500,
+    width=900,
+    showlegend=False
+)
+
+# Set x-axis labels
+fig.update_xaxes(title_text="S.S.C (GPA)", row=1, col=1)
+fig.update_xaxes(title_text="H.S.C (GPA)", row=1, col=2)
+
+# Set y-axis label (only for the left plot, as they share the same axis meaning)
+fig.update_yaxes(title_text="Frequency", row=1, col=1)
+
+# To display in Streamlit, you would use:
+# st.plotly_chart(fig)
