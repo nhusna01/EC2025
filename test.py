@@ -92,23 +92,32 @@ else:
 
 
 
+# --- 1. Load Data ---
+# Note: In a real Streamlit app, you would typically load files this way
+# or use st.cache_data, but for this example, we assume arts_faculty_data.csv is available.
+try:
+    # Attempt to load the file based on the environment setup
+    # If the file is uploaded, you'd handle it differently, 
+    # but for a self-contained app, we assume the file is in the same directory.
+    arts_df = pd.read_csv("arts_faculty_data.csv") 
+except FileNotFoundError:
+    st.error("Error: 'arts_faculty_data.csv' not found. Please ensure the file is in the same directory as your Streamlit app.")
+    st.stop()
 
-# Load the data
-file_name = "arts_faculty_data.csv"
-arts_df = pd.read_csv(file_name)
 
-# 1. Identify GPA columns (indices 12 to 23 inclusive, based on previous inspection)
+# --- 2. Data Preparation ---
+
+# Identify GPA columns (indices 12 to 23 inclusive)
 gpa_cols_full = arts_df.columns[12:24].tolist()
 
-# 2. Convert GPA columns to numeric
+# Convert GPA columns to numeric
 for col in gpa_cols_full:
     arts_df[col] = pd.to_numeric(arts_df[col], errors='coerce')
 
 # Select only the relevant columns and drop rows with missing Arts Program
 plot_df = arts_df[['Arts Program'] + gpa_cols_full].dropna(subset=['Arts Program'])
 
-# 3. Melt the DataFrame to long format
-# 'id_vars' are columns to keep, 'value_vars' are columns to unpivot (GPA semesters)
+# Melt the DataFrame to long format
 melted_df = plot_df.melt(
     id_vars='Arts Program',
     value_vars=gpa_cols_full,
@@ -116,14 +125,16 @@ melted_df = plot_df.melt(
     value_name='GPA'
 ).dropna(subset=['GPA'])
 
-# 4. Create a numerical semester order column for correct plotting
+# Create a numerical semester order column for correct plotting
 semester_order_map = {name: i + 1 for i, name in enumerate(gpa_cols_full)}
 melted_df['Semester Order'] = melted_df['Semester Name'].map(semester_order_map)
 
-# 5. Calculate the mean GPA for each Arts Program at each Semester
+# Calculate the mean GPA for each Arts Program at each Semester
 gpa_trend_df = melted_df.groupby(['Arts Program', 'Semester Order', 'Semester Name'])['GPA'].mean().reset_index()
 
-# 6. Create the Plotly Line Chart
+
+# --- 3. Plotly Chart Generation ---
+
 fig = px.line(
     gpa_trend_df,
     x='Semester Name',
@@ -133,23 +144,37 @@ fig = px.line(
     title='Average GPA Trend by Arts Program Over Academic Semesters'
 )
 
-# Customise axes and layout for better readability
 fig.update_xaxes(
     tickangle=45,
     title_text='Academic Semester',
     categoryorder='array',
-    categoryarray=gpa_cols_full # Ensure semesters are in the correct chronological order
+    categoryarray=gpa_cols_full # Enforce chronological order
 )
 fig.update_yaxes(
     title_text='Average GPA',
-    range=[2.5, 4.0] # Set a relevant range for GPA
+    range=[2.5, 4.0]
 )
 fig.update_layout(
     height=600,
-    width=1000,
+    width=900,
     hovermode="x unified",
     legend_title_text='Arts Program'
 )
 
-# Save the plot as an HTML file for easy viewing and Streamlit integration
-fig.write_html("gpa_trend_line_chart.html")
+# --- 4. Streamlit Display ---
+
+st.title("Arts Faculty Academic Performance Dashboard")
+
+# **THIS IS THE CRITICAL STEP**
+st.plotly_chart(fig, use_container_width=True) 
+
+st.markdown("---")
+st.header("Analysis")
+st.markdown(
+    "The line chart above tracks the average GPA for each Arts Program across all academic semesters, "
+    "allowing for a clear visual comparison of performance trends."
+)
+
+
+
+
