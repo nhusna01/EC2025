@@ -188,7 +188,7 @@ with col2:
 # Load your dataset
 # Example: arts_df = pd.read_csv("arts_faculty_data.csv")
 
-st.title("📊 Boxplots of Student Survey Responses")
+st.title("Boxplots of Student Survey Responses")
 
 # Select the relevant columns
 survey_cols = [
@@ -240,7 +240,7 @@ st.plotly_chart(fig, use_container_width=True)
 # Load data
 # Example: arts_df = pd.read_csv("arts_faculty_data.csv")
 
-st.title("🎨 Distribution of Gender within Arts Programs")
+st.title("Distribution of Gender within Arts Programs")
 
 # Count the occurrences of each combination of 'Arts Program' and 'Gender'
 gender_program_counts = (
