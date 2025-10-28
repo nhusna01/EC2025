@@ -7,7 +7,7 @@ import pandas as pd
 url = "https://raw.githubusercontent.com/nhusna01/EC2025/refs/heads/main/arts_faculty_data.csv"
 
 # Set the title for the Streamlit app
-st.title("Arts Faculty Data Viewer")
+st.title("Arts Faculty Student Data")
 
 @st.cache_data
 def load_data(data_url):
