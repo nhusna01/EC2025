@@ -7,6 +7,6 @@ st.set_page_config(page_title="Dashboard", page_icon=":material/home:")
 # Sidebar Navigation Pages
 show_pages([
     Page("home.py", title="Homepage", icon=":material/home:"),
-    Page("StudentSurvey.py", title="Student Survey", icon=":material/school:"),
+    Page("studentSurvey.py", title="Student Survey", icon=":material/school:"),
     Page("StudentCoursework.py", title="Student Coursework", icon=":material/book:"),
 ])
