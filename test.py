@@ -1,22 +1,13 @@
-
 import streamlit as st
 from st_pages import Page, show_pages
 
-st.set_page_config(page_title="Student Survey", page_icon=":material/school:")
-st.set_page_config(page_title="AV Accident Survey Data", page_icon=":material/car:")
+# Page Setup
+st.set_page_config(page_title="Dashboard", page_icon=":material/home:")
 
+# Sidebar Navigation Pages
 show_pages([
-    Page("studentSurvey.py", title="Pencapaian Akademik Pelajar", icon=":material/school:"),
-    Page("StudentCoursework.py", title="Student Academic", icon=":material/book:")
+    Page("home.py", title="Homepage", icon=":material/home:"),
+    Page("studentSurvey.py", title="Student Survey", icon=":material/school:"),
+    Page("StudentCoursework.py", title="Student Coursework", icon=":material/book:"),
+    Page("AV_Accident.py", title="AV Accident Survey", icon=":material/car:")
 ])
-
-
-home = st.Page('home.py', title='Homepage', default=True, icon=":material/home:")
-
-pg = st.navigation(
-        {
-            "Menu": [home, visualise]
-        }
-    )
-
-pg.run()
